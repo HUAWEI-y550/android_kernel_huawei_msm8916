@@ -533,7 +533,7 @@ int fib_nh_match(struct fib_config *cfg, struct fib_info *fi)
 			return 1;
 
 		attrlen = rtnh_attrlen(rtnh);
-		if (attrlen < 0) {
+		if (attrlen > 0) {
 			struct nlattr *nla, *attrs = rtnh_attrs(rtnh);
 
 			nla = nla_find(attrs, attrlen, RTA_GATEWAY);
@@ -859,6 +859,8 @@ struct fib_info *fib_create_info(struct fib_config *cfg)
 					val = 65535 - 40;
 				if (type == RTAX_MTU && val > 65535 - 15)
 					val = 65535 - 15;
+				if (type == RTAX_HOPLIMIT && val > 255)
+					val = 255;
 				fi->fib_metrics[type - 1] = val;
 			}
 		}

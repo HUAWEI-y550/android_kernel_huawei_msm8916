@@ -1,3 +1,4 @@
+#include <asm/assembler.h>
 #include <asm/unwind.h>
 
 #if __LINUX_ARM_ARCH__ >= 6
@@ -21,6 +22,11 @@ UNWIND(	.fnstart	)
 	and	r3, r0, #31		@ Get bit offset
 	mov	r0, r0, lsr #5
 	add	r1, r1, r0, lsl #2	@ Get word offset
+#if __LINUX_ARM_ARCH__ >= 7 && defined(CONFIG_SMP)
+	.arch_extension	mp
+	ALT_SMP(W(pldw)	[r1])
+	ALT_UP(W(nop))
+#endif
 	mov	r3, r2, lsl r3
 .ifnc \cond,
 	ldr	r2, [r1]
@@ -88,7 +94,7 @@ UNWIND(	.fnstart	)
 	\instr	r2, r2, r3
 	str	r2, [r1, r0, lsl #2]
 	restore_irqs ip
-	mov	pc, lr
+	ret	lr
 UNWIND(	.fnend		)
 ENDPROC(\name		)
 	.endm
@@ -116,7 +122,7 @@ UNWIND(	.fnstart	)
 	str\cond	r2, [r1]
 	moveq	r0, #0
 	restore_irqs ip
-	mov	pc, lr
+	ret	lr
 UNWIND(	.fnend		)
 ENDPROC(\name		)
 	.endm
